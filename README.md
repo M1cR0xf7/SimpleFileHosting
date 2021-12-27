@@ -1,5 +1,7 @@
 # Simple File Hosting
 
+very simple for personal use.
+
 ### Build
 
 simply run `cargo build --release`
