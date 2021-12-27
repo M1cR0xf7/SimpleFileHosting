@@ -1,5 +1,5 @@
 [package]
-name = "SimpleFileHosting"
+name = "sfh"
 version = "0.1.0"
 authors = ["Youssef Hesham <m1cr0xf7@protonmail.com>"]
 edition = "2018"
