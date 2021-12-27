@@ -15,8 +15,9 @@ use crate::settings;
 
 pub async fn file_save(req: HttpRequest, mut payload: Multipart) -> Result<HttpResponse, Error> {
     // iterate over multipart stream
+    let uniq_id = gen_rand_id(16);
     while let Some(mut field) = payload.try_next().await? {
-        let filepath = format!("{}/{}", settings::UPLOAD_FOLDER, gen_rand_id(16));
+        let filepath = format!("{}/{}", settings::UPLOAD_DIR, uniq_id);
 
         // File::create is blocking operation, use threadpool
         let mut f = web::block(|| fs::File::create(filepath)).await?;
@@ -30,7 +31,10 @@ pub async fn file_save(req: HttpRequest, mut payload: Multipart) -> Result<HttpR
 
     println!("Handling multipart POST request:\n{:?}", req);
 
-    Ok(HttpResponse::Ok().into())
+
+    Ok(HttpResponse::Ok()
+       .content_type("text/plain")
+       .body(format!("Uploaded successfuly: at /get/{}\n", uniq_id)))
 }
 
 
@@ -46,6 +50,10 @@ pub fn gen_rand_id(n: usize) -> String {
         .take(n)
         .map(char::from)
         .collect()
+}
+
+pub fn exists(path: &str) -> bool {
+    fs::metadata(path).is_ok()
 }
 
 // pub async fn write_file(path: String, content: String) -> Result<(), Error> {

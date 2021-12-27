@@ -39,24 +39,8 @@ async fn index(req: HttpRequest) -> Result<HttpResponse> {
        .body(content))
 }
 
-async fn handle_post(req: HttpRequest, d: web::Form<File>) -> impl Responder {
-    println!("Handling request: {:?}", req);
 
-    // TODO:
-    // 1. generate a file name (to get it in the future by /<name>/)
-    // 2. add the name to the database along with the date and time in which the file
-    // was created
-    // 3. write a file to the disk as <name>
-    // 4. send a response with the http://127.0.0.1:8080/<name>/
-
-    HttpResponse::Ok()
-       .content_type("text/plain")
-       .body(format!("{}\n---------\n{}\n", utils::gen_rand_id(16), d.data))
-       // .body(format!("{}", data.title))
-}
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn run_server() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     println!("serving on: {}:{}", HOST, PORT);
 
@@ -68,11 +52,10 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::resource("/post")
                     .app_data(web::FormConfig::default().limit(4097))
-                    .route(web::post().to(handle_post))
+                    .route(web::post().to(utils::file_save))
                 )
             .service(
-                web::resource("/upload")
-                    .route(web::post().to(utils::file_save))
+                a_fs::Files::new("/get", "./up/")
                 )
 
 
@@ -98,4 +81,20 @@ async fn main() -> std::io::Result<()> {
     .bind([HOST, PORT].join(":"))?
     .run()
     .await
+
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    if !utils::exists(UPLOAD_DIR) {
+        println!("upload folder is missing: expected {}", UPLOAD_DIR);
+        std::process::exit(1);
+    }
+    if !utils::exists(FRONTEND_DIR) {
+        println!("frontend folder is missing: expected {}", FRONTEND_DIR);
+        std::process::exit(1);
+    }
+
+
+    run_server().await
 }
